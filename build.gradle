@@ -1,0 +1,58 @@
+plugins {
+    id 'java'
+    id 'scala'
+    id 'org.liquibase.gradle' version '2.1.0'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation  group: 'org.scala-lang', name: 'scala-library', version: '2.13.7'
+    testImplementation group: 'org.scalatest', name: 'scalatest_2.13', version: '3.2.0'
+
+    implementation  group: 'dev.zio', name: 'zio_2.13', version: '1.0.7'
+    implementation  group: 'dev.zio', name: 'zio-macros_2.13', version: '1.0.7'
+
+    implementation  group: 'com.typesafe', name: 'config', version: '1.4.1'
+    implementation  group: 'org.postgresql', name: 'postgresql', version: '42.3.1'
+
+    implementation  group: 'com.typesafe.scala-logging', name: 'scala-logging_2.13', version: '3.9.2'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.9'
+
+    implementation group: 'dev.zio', name: 'zio-json_2.13', version: '0.1.5'
+    implementation group: 'io.getquill', name: 'quill-jdbc-zio_2.13', version: '3.12.0'
+
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.0'
+    testRuntimeOnly  group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
+
+    liquibaseRuntime group: 'org.liquibase',  name: 'liquibase-core', version:'4.5.0'
+    liquibaseRuntime group: 'info.picocli',  name: 'picocli', version:'4.6.1'
+    liquibaseRuntime group: 'org.yaml',       name: 'snakeyaml',      version: '1.29'
+    liquibaseRuntime group: 'org.postgresql', name: 'postgresql',     version: '42.3.1'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+
+liquibase {
+    activities {
+        //noinspection GroovyAssignabilityCheck
+        main {
+            changeLogFile 'src/main/resources/changelog.yaml'
+            url 'jdbc:postgresql://localhost:5432/enrich'
+            username System.properties['liquibase_user']
+            password System.properties['liquibase_password']
+        }
+    }
+}
+
+
+
+

@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "enrich"
+      POSTGRES_USER: "liquibase"
+      POSTGRES_PASSWORD: "liquibase"
+    ports:
+      - "5432:5432"

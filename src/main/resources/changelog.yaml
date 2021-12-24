@@ -1,0 +1,287 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 1
+      author: pashtetos
+      changes:
+        - createTable:
+            tableName: hosts
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: hostname
+                  type: varchar(256)
+              - column:
+                  name: ip
+                  type: varchar(256)
+                  constraints:
+              - column:
+                  name: add_field
+                  type: text
+        - createTable:
+            tableName: subject
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: login
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(256)
+              - column:
+                  name: add_field
+                  type: text
+        - createTable:
+            tableName: object
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: obj_name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: obj_path
+                  type: text
+              - column:
+                  name: obj_type
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: add_field
+                  type: text
+        - createTable:
+            tableName: iocs
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: subject
+                  type: integer
+                  constraints:
+              - column:
+                  name: host
+                  type: integer
+                  constraints:
+              - column:
+                  name: object
+                  type: integer
+              - column:
+                  name: type
+                  type: varchar(256)
+              - column:
+                  name: add_field
+                  type: text
+        - addForeignKeyConstraint:
+            baseColumnNames: subject
+            baseTableName: iocs
+            constraintName: fk_iocs_subject
+            deferrable: false
+            initiallyDeferred: false
+            onDelete: RESTRICT
+            onUpdate: NO ACTION
+            referencedColumnNames: id
+            referencedTableName: subject
+        - addForeignKeyConstraint:
+            baseColumnNames: object
+            baseTableName: iocs
+            constraintName: fk_iocs_object
+            deferrable: false
+            initiallyDeferred: false
+            onDelete: RESTRICT
+            onUpdate: NO ACTION
+            referencedColumnNames: id
+            referencedTableName: object
+        - addForeignKeyConstraint:
+            baseColumnNames: host
+            baseTableName: iocs
+            constraintName: fk_iocs_host
+            deferrable: false
+            initiallyDeferred: false
+            onDelete: RESTRICT
+            onUpdate: NO ACTION
+            referencedColumnNames: id
+            referencedTableName: hosts
+  - changeSet:
+      id: 2
+      author: pashtetos
+      changes:
+        - insert:
+            tableName: subject
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: login
+                  value: Test
+              - column:
+                  name: email
+                  value: test@test.com
+        - insert:
+            tableName: subject
+            columns:
+              - column:
+                  name: id
+                  value: 2
+              - column:
+                  name: login
+                  value: Comprot
+              - column:
+                  name: add_field
+                  value: hacking
+        - insert:
+            tableName: subject
+            columns:
+              - column:
+                  name: id
+                  value: 3
+              - column:
+                  name: login
+                  value: userhack
+              - column:
+                  name: email
+                  value: class@user.com
+        - insert:
+            tableName: hosts
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: hostname
+                  value: hacker.com
+              - column:
+                  name: ip
+                  value: 21.21.21.21
+        - insert:
+            tableName: hosts
+            columns:
+              - column:
+                  name: id
+                  value: 2
+              - column:
+                  name: add_field
+                  value: fake
+              - column:
+                  name: ip
+                  value: 21.21.21.21
+        - insert:
+            tableName: hosts
+            columns:
+              - column:
+                  name: id
+                  value: 3
+              - column:
+                  name: hostname
+                  value: cheater.ru
+        - insert:
+            tableName: object
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: obj_name
+                  value: hacktool.exe
+              - column:
+                  name: obj_type
+                  value: virus
+        - insert:
+            tableName: object
+            columns:
+              - column:
+                  name: id
+                  value: 2
+              - column:
+                  name: obj_name
+                  value: sha111
+              - column:
+                  name: obj_type
+                  value: hashcode
+        - insert:
+            tableName: object
+            columns:
+              - column:
+                  name: id
+                  value: 3
+              - column:
+                  name: obj_name
+                  value: stop.sh
+              - column:
+                  name: obj_type
+                  value: script
+              - column:
+                  name: obj_path
+                  value: /etc/bin/
+              - column:
+                  name: add_field
+                  value: crash kernel
+        - insert:
+            tableName: iocs
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: subject
+                  value: 1
+              - column:
+                  name: type
+                  value: user
+        - insert:
+            tableName: iocs
+            columns:
+              - column:
+                  name: id
+                  value: 2
+              - column:
+                  name: object
+                  value: 2
+              - column:
+                  name: host
+                  value: 3
+              - column:
+                  name: type
+                  value: filehost
+        - insert:
+            tableName: iocs
+            columns:
+              - column:
+                  name: id
+                  value: 3
+              - column:
+                  name: subject
+                  value: 3
+              - column:
+                  name: host
+                  value: 1
+              - column:
+                  name: type
+                  value: userhost
