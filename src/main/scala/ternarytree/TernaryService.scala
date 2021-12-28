@@ -27,18 +27,19 @@ object TernaryService {
   class Impl extends Service {
     override def init(iocs: List[Ioc]): UIO[Unit] =
       ZIO.collect(iocs)(ioc =>
-        ZIO.succeed(hashTree.update("subjectName", hashTree("subjectName")
-          .insert(ioc.subject.login, ioc))).as(capabIoc.addOne(ioc.id, ioc.ctr())) *>
-          ZIO.fromOption(ioc.`object`)
-            .map(objIoc =>
+        for {
+          _ <- ZIO.succeed(hashTree.update("subjectName", hashTree("subjectName")
+            .insert(ioc.subject.login, ioc)))
+          _ <- ZIO.succeed(capabIoc.addOne(ioc.id, ioc.ctr()))
+          _ <- ZIO.fromOption(ioc.`object`).map(objIoc =>
             hashTree.update("objectName", hashTree("objectName")
-              .insert(objIoc.name, ioc))).option *>
-          ZIO.fromOption(ioc.host.flatMap(hostIoc =>
+              .insert(objIoc.name, ioc))).option
+          _ <- ZIO.fromOption(ioc.host.flatMap(hostIoc =>
             hostIoc.host.orElse(hostIoc.ip)))
             .map(hostIoc =>
               hashTree.update("host", hashTree("host")
-                .insert(hostIoc, ioc))
-            )).unit
+                .insert(hostIoc, ioc)))
+        } yield ()).unit
 
     override def search(events: List[Event]): UIO[List[(Event, List[Int])]] =
       ZIO.collectPar(events)(ev =>

@@ -1,5 +1,6 @@
 package filereader
-
+import config.AppConfig
+import zio.logging._
 import zio._
 
 import scala.io.Source
@@ -9,20 +10,26 @@ object FileService {
   type FileService = Has[Service]
 
   trait Service{
-    def getData(path: String): Task[List[String]]
+    def getData: RIO[Has[AppConfig.FileConfig] with Logging, List[String]]
   }
 
   class Impl extends Service {
-    override def getData(path: String):Task[List[String]] = {
-      ZIO.bracket(ZIO.effect(Source.fromFile(path)))(res => URIO(res.close())){ file =>
-        ZIO.foreach(file.getLines().toList)(raw =>
-          ZIO.succeed(raw)
+    override def getData:RIO[Has[AppConfig.FileConfig] with Logging, List[String]] = {
+      ZIO.accessM[Has[AppConfig.FileConfig] with Logging](config =>
+        ZIO.bracket(
+          log.info(s"Starting read file with path: ${config.get.path}") *>
+            ZIO.effect(Source.fromFile(config.get.path)
+          ))
+        (
+          res => URIO(res.close())
+        )(
+          file => ZIO.effect(file.getLines().toList)
         )
-      }
+      )
     }
   }
 
   val live: ULayer[FileService] = ZLayer.succeed(new Impl)
 
-  def getData(path: String): RIO[FileService,List[String]] = ZIO.accessM(_.get.getData(path))
+  def getData: RIO[FileService with Has[AppConfig.FileConfig] with Logging, List[String]] = ZIO.accessM(_.get.getData)
 }

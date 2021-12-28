@@ -2,6 +2,12 @@ package ternarytree
 
 import scala.annotation.tailrec
 
+/**
+ *
+ * take from: https://gist.github.com/alirezameskin/95f79c4ed5ecded2929a52da1cf817bc
+ */
+
+
 sealed trait TernaryTree[+A] {
   def insert[B >: A](key: String, value: B): TernaryTree[B] = TernaryTree.insert(this, key, value, 0)
 
