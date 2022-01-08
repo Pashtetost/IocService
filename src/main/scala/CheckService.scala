@@ -4,7 +4,7 @@ import json.JsonConverter
 import model.Event
 import ternarytree.TernaryService
 import zio.logging.{ Logging, log}
-import zio.{Has, RIO, Task, ZIO, ZLayer}
+import zio.{Has, RIO, ZIO, ZLayer}
 
 object CheckService {
   type CheckService = Has[Service]
@@ -22,14 +22,13 @@ object CheckService {
          iocsAdapter.map{
            case (((ioc, subj), obj), host) => ioc.setIoc(subj.setSubject(), obj.map(_.setObject()), host.map(_.setHost()))
          })
-       _ <- ternary.init(iocsR)
+       iocData <- ternary.initIocData(iocsR)
        _ <- log.info(s"start check events")
-       res <- ternary.search(events)
+       res <- ternary.searchIoc(events).provide(iocData)
        anw = res.filter(_._2.nonEmpty)
        _ <- ZIO.collect(anw){case (ev, num) => log.info(s"event: $ev\n Ioc IDs: $num")}
      } yield anw
   }
-
 
 
   val live = ZLayer.fromServices[JsonConverter.Service, IocRepository.Service, TernaryService.Service, CheckService.Service](
