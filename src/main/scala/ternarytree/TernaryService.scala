@@ -11,7 +11,9 @@ object TernaryService {
   trait Service {
     def initIocData(iocs: List[Ioc]): UIO[IocData]
 
-    def searchIoc(events: List[Event]): URIO[IocData, List[(Event, List[Int])]]
+    def searchListIoc(events: List[Event]): URIO[IocData, List[(Event, List[Int])]]
+
+    def searchIocs(event: Event, iocData: IocData): UIO[(Event, List[Int])]
   }
 
   class Impl extends Service {
@@ -33,7 +35,7 @@ object TernaryService {
           } yield ()).unit
       } yield IocData(hashTree2, capabIoc2)
 
-    override def searchIoc(events: List[Event]): URIO[IocData, List[(Event, List[Int])]] =
+    override def searchListIoc(events: List[Event]): URIO[IocData, List[(Event, List[Int])]] =
       ZIO.accessM[IocData] { iocData =>
         for {
           hashTree2 <- iocData.hashTree.get
@@ -50,9 +52,22 @@ object TernaryService {
               ))
         } yield res
       }
+
+    override def searchIocs(event: Event, iocData: IocData): UIO[(Event, List[Int])] =
+        for {
+          hashTree <- iocData.hashTree.get
+          capabIoc <- iocData.capabIoc.get
+          res <- ZIO.collectPar(List(searchAttribute(event, "subjectName", hashTree),
+            searchAttribute(event, "objectName", hashTree),
+            searchAttribute(event, "hostS", hashTree),
+            searchAttribute(event, "hostD", hashTree)))(ZIO.fromOption(_))
+            .map(listIoc => event -> filterIoc(listIoc, capabIoc))
+        } yield res
   }
 
-    val live: ULayer[TernaryService] = ZLayer.succeed(new Impl)
+  val live: ULayer[TernaryService] = ZLayer.succeed(new Impl)
+
+  def searchIocs(event: Event, iocData: IocData): URIO[TernaryService, (Event, List[Int])] = ZIO.accessM(_.get.searchIocs(event, iocData))
 
   /**
    * Helpers for correct check Iocs

@@ -13,7 +13,8 @@ object JsonConverter {
   type JsonConverter = Has[Service]
 
   trait Service{
-    def parse: RIO[Has[AppConfig.FileConfig] with Logging, List[Event]]
+    def decodeList: RIO[Has[AppConfig.FileConfig] with Logging, List[Event]]
+    def decodeStr(str: String): UIO[Either[String, Event]]
   }
 
   implicit val decoderSubject: JsonDecoder[Subject] = DeriveJsonDecoder.gen[Subject]
@@ -22,7 +23,7 @@ object JsonConverter {
   implicit val decoderEvent: JsonDecoder[Event] = DeriveJsonDecoder.gen[Event]
 
   class Impl(fileService: FileService.Service) extends Service {
-    override def parse: RIO[Has[AppConfig.FileConfig] with Logging, List[Event]] =
+    override def decodeList: RIO[Has[AppConfig.FileConfig] with Logging, List[Event]] =
       for {
        rawEvents <- fileService.getData
        _ <- log.info(s"Starting convent events from Json")
@@ -30,10 +31,15 @@ object JsonConverter {
           ZIO.fromOption(rawEvent.fromJson[Event].fold(_ => None, event => Some(event)))
         }
       } yield anw
+
+    override def decodeStr(str: String): UIO[Either[String, Event]] =
+      ZIO.succeed(str.fromJson[Event])
   }
 
   val live: URLayer[Has[FileService.Service], Has[Service]] =
     ZLayer.fromService[FileService.Service,JsonConverter.Service](fileService => new Impl(fileService))
 
-  def parse: RIO[JsonConverter with Has[AppConfig.FileConfig] with Logging,List[Event]] = ZIO.accessM(_.get.parse)
+  def decodeList: RIO[JsonConverter with Has[AppConfig.FileConfig] with Logging,List[Event]] = ZIO.accessM(_.get.decodeList)
+
+  def decodeStr(str: String): URIO[JsonConverter, Either[String, Event]] = ZIO.accessM(_.get.decodeStr(str))
 }

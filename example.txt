@@ -1,2 +1,5 @@
-{"id": "11", "eventTime": 1640080362, "source": {"ip": "127.0.0.1", "port": 1254, "hostname": "test-host"}, "destination": {"ip": "127.0.0.5", "port": 1255, "hostname": "test-host-2"}, "subject": {"name": "userhack", "category": "user"}, "object": {"name": "hacktool.exe", "category": "computer"}, "action": "login", "AddField1": "clear"}
+{"id": "11", "eventTime": 1640080362, "source": {"ip": "127.0.0.1", "port": 1254, "hostname": "test-host"}, "destination": {"ip": "127.0.0.2", "port": 1255, "hostname": "test-host-2"}, "subject": {"name": "userhack", "category": "user"}, "object": {"name": "hacktool.exe", "category": "computer"}, "action": "login", "AddField1": "clear"}
 {"id": "22", "eventTime": 1640080362, "source": {"ip": "127.0.0.1", "port": 1254, "hostname": "test-host"}, "destination": {"ip": "127.0.0.3", "port": 1255, "hostname": "test-host-2"}, "subject": {"name": "Test", "category": "user"}, "object": {"name": "wns129342", "category": "computer"}, "action": "login", "AddField1": "clear"}
+999999
+mafama
+4548
