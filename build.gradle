@@ -23,6 +23,7 @@ dependencies {
 
     implementation group: 'dev.zio', name: 'zio-json_2.13', version: '0.1.5'
     implementation group: 'dev.zio', name: 'zio-streams_2.13', version: '1.0.13'
+    implementation group: 'dev.zio', name: 'zio-kafka_2.13', version: '0.17.3'
 
     implementation group: 'dev.zio', name: 'zio-config_2.13', version: '1.0.10'
     implementation group: 'dev.zio', name: 'zio-config-typesafe_2.13', version: '1.0.10'

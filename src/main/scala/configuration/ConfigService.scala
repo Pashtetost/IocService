@@ -7,8 +7,9 @@ import zio.config.magnolia.DeriveConfigDescriptor.descriptor
 import zio.config.typesafe.TypesafeConfig.fromDefaultLoader
 
 object ConfigService {
+  type ConfigService = Has[AppConfig]
 
   private val configDescriptor = descriptor[AppConfig]
 
-  val live: Layer[ReadError[String], Has[AppConfig]] = fromDefaultLoader(configDescriptor)
+  val live: Layer[ReadError[String], ConfigService] = fromDefaultLoader(configDescriptor)
 }
