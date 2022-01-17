@@ -1,11 +1,9 @@
 package json
 
 
-import filereader.FileService
-import config.AppConfig
 import model._
 import zio._
-import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
+import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 import zio.logging.{Logging, log}
 
 
@@ -13,27 +11,40 @@ object JsonConverter {
   type JsonConverter = Has[Service]
 
   trait Service{
-    def parse: RIO[Has[AppConfig.FileConfig] with Logging, List[Event]]
+    def decodeList(listRaw: List[String]): UIO[List[Event]]
+    def decodeStr(str: String): Task[Either[String, Event]]
+    def encodeEvent(event: Event): UIO[String]
   }
 
-  implicit val decoderSubject: JsonDecoder[Subject] = DeriveJsonDecoder.gen[Subject]
-  implicit val decoderObject: JsonDecoder[Object] = DeriveJsonDecoder.gen[Object]
-  implicit val decoderNetwork: JsonDecoder[NetworkAsset] = DeriveJsonDecoder.gen[NetworkAsset]
-  implicit val decoderEvent: JsonDecoder[Event] = DeriveJsonDecoder.gen[Event]
+  implicit private val decoderSubject: JsonDecoder[Subject] = DeriveJsonDecoder.gen[Subject]
+  implicit private val decoderObject: JsonDecoder[Object] = DeriveJsonDecoder.gen[Object]
+  implicit private val decoderNetwork: JsonDecoder[NetworkAsset] = DeriveJsonDecoder.gen[NetworkAsset]
+  implicit private val decoderEvent: JsonDecoder[Event] = DeriveJsonDecoder.gen[Event]
+  implicit private val encoderSubject: JsonEncoder[Subject] = DeriveJsonEncoder.gen[Subject]
+  implicit private val encoderObject: JsonEncoder[Object] = DeriveJsonEncoder.gen[Object]
+  implicit private val encoderNetwork: JsonEncoder[NetworkAsset] = DeriveJsonEncoder.gen[NetworkAsset]
+  implicit private val encoderEvent: JsonEncoder[Event] = DeriveJsonEncoder.gen[Event]
 
-  class Impl(fileService: FileService.Service) extends Service {
-    override def parse: RIO[Has[AppConfig.FileConfig] with Logging, List[Event]] =
-      for {
-       rawEvents <- fileService.getData
-       _ <- log.info(s"Starting convent events from Json")
-       anw <- ZIO.collectPar(rawEvents){rawEvent =>
-          ZIO.fromOption(rawEvent.fromJson[Event].fold(_ => None, event => Some(event)))
-        }
-      } yield anw
-  }
+  val live: URLayer[Logging , JsonConverter] = ZLayer.fromFunction(env => new Service {
+    override def decodeList(listRaw: List[String]): UIO[List[Event]] =
+        (for {
+          _ <- log.info(s"Starting convent events from Json")
+          anw <- ZIO.collectPar(listRaw){rawEvent =>
+            ZIO.fromOption(rawEvent.fromJson[Event].fold(_ => None, event => Some(event)))
+          }
+        } yield anw).provide(env)
 
-  val live: URLayer[Has[FileService.Service], Has[Service]] =
-    ZLayer.fromService[FileService.Service,JsonConverter.Service](fileService => new Impl(fileService))
+    override def decodeStr(str: String): Task[Either[String, Event]] =
+        ZIO.effect(str.fromJson[Event])
 
-  def parse: RIO[JsonConverter with Has[AppConfig.FileConfig] with Logging,List[Event]] = ZIO.accessM(_.get.parse)
+    override def encodeEvent(event: Event): UIO[String] =
+      ZIO.succeed(event.toJson)
+
+  })
+
+  def decodeList(listRaw: List[String]): URIO[JsonConverter, List[Event]] = ZIO.accessM(_.get.decodeList(listRaw))
+
+  def decodeStr(str: String): RIO[JsonConverter, Either[String, Event]] = ZIO.accessM(_.get.decodeStr(str))
+
+  def encodeEvent(event: Event): URIO[JsonConverter, String] = ZIO.accessM(_.get.encodeEvent(event))
 }

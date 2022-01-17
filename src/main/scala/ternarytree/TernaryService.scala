@@ -11,7 +11,9 @@ object TernaryService {
   trait Service {
     def initIocData(iocs: List[Ioc]): UIO[IocData]
 
-    def searchIoc(events: List[Event]): URIO[IocData, List[(Event, List[Int])]]
+    def searchListIoc(events: List[Event], iocData: IocData): UIO[List[(Event, List[Int])]]
+
+    def searchIocs(event: Event, iocData: IocData): UIO[Event]
   }
 
   class Impl extends Service {
@@ -33,8 +35,7 @@ object TernaryService {
           } yield ()).unit
       } yield IocData(hashTree2, capabIoc2)
 
-    override def searchIoc(events: List[Event]): URIO[IocData, List[(Event, List[Int])]] =
-      ZIO.accessM[IocData] { iocData =>
+    override def searchListIoc(events: List[Event], iocData: IocData): UIO[List[(Event, List[Int])]] =
         for {
           hashTree2 <- iocData.hashTree.get
           capabIoc2 <- iocData.capabIoc.get
@@ -49,10 +50,27 @@ object TernaryService {
                 ev -> filterIoc(listIoc, capabIoc2)
               ))
         } yield res
-      }
+
+    override def searchIocs(event: Event, iocData: IocData): UIO[Event] =
+        for {
+          hashTree <- iocData.hashTree.get
+          capabIoc <- iocData.capabIoc.get
+          res <- ZIO.collectPar(List(searchAttribute(event, "subjectName", hashTree),
+            searchAttribute(event, "objectName", hashTree),
+            searchAttribute(event, "hostS", hashTree),
+            searchAttribute(event, "hostD", hashTree)))(ZIO.fromOption(_))
+            .map(listIoc => event.setListIoc(filterIoc(listIoc, capabIoc)))
+        } yield res
   }
 
-    val live: ULayer[TernaryService] = ZLayer.succeed(new Impl)
+  val live: ULayer[TernaryService] = ZLayer.succeed(new Impl)
+
+  def searchIocs(event: Event, iocData: IocData): URIO[TernaryService, Event] = ZIO.accessM(_.get.searchIocs(event, iocData))
+
+  def searchListIoc(events: List[Event], iocData: IocData): URIO[TernaryService, List[(Event, List[Int])]] = ZIO.accessM(_.get.searchListIoc(events, iocData))
+
+  def initIocData(iocs: List[Ioc]): URIO[TernaryService, IocData] = ZIO.accessM(_.get.initIocData(iocs))
+
 
   /**
    * Helpers for correct check Iocs

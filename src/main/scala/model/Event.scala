@@ -8,8 +8,12 @@ case class Event(id: String,
                  `object`: Option[Object],
                  action: String,
                  AddField1: Option[String],
-                 AddField2: Option[String]
-                )
+                 AddField2: Option[String],
+                 listIoc: List[Int]
+                ){
+  def setListIoc(list: List[Int]): Event =
+    this.copy(listIoc = list)
+}
 
 
 case class NetworkAsset(ip: Option[String],
